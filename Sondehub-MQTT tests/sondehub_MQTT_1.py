@@ -5,10 +5,10 @@ import json
 rotation_data = []
 
 # Output file CHANGE TO ACTUAL FILE
-output_file = "rotation_data.json"
+output_file = "output_data.json"
 
 #CHANGE WHEN NEEDED
-TARGET_CALLSIGN = "123ABC"
+TARGET_CALLSIGN = "SP2ROC-39"
 
 # Callback when connected to MQTT broker
 def on_connect(client, userdata, flags, rc):
