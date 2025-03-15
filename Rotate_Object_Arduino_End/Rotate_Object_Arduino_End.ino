@@ -1,7 +1,8 @@
 #include <Wire.h>
+#include <SPI.h>
 #include <SD.h>
 
-String dataString = "";
+
 const int chipSelect = 10;
 const int MPU = 0x68; // MPU6050 I2C address
 float AccX, AccY, AccZ;
@@ -24,7 +25,7 @@ CLK: 14
 CS: 10
 */
 void setup() {
-  Serial.begin(19200);
+  Serial.begin(9600);
   Wire.begin();                      // Initialize comunication
   Wire.beginTransmission(MPU);       // Start communication with MPU6050 // MPU=0x68
   Wire.write(0x6B);                  // register 6B
@@ -42,6 +43,7 @@ void setup() {
   delay(20);
   calculate_IMU_error();
   delay(20);
+  SD.begin(chipSelect);
 }
 void loop() {
   // read data
@@ -94,27 +96,28 @@ void loop() {
   Serial.println(", ");
 
   // add values to the SD card
-  File dataFile = SD.open("data.txt", FILE_WRITE);
+  File dataFile = SD.open("DATA.txt", FILE_WRITE);
 
   // if the file is available, then write to it
   if (dataFile) {
-  dataFile.print(Xrot);
-  dataFile.print(", ");
-  dataFile.print(Yrot);
-  dataFile.print(", ");
-  dataFile.print(Zrot);
-  dataFile.print(", ");
-  dataFile.print(AccX);
-  dataFile.print(", ");
-  dataFile.print(AccY);
-  dataFile.print(", ");
-  dataFile.print(AccZ);
-  dataFile.println(", ");
-  dataFile.close();
+    dataFile.print((String)Xrot);
+    dataFile.print(", ");
+    dataFile.print((String)Yrot);
+    dataFile.print(", ");
+    dataFile.print((String)Zrot);
+    dataFile.print(", ");
+    dataFile.print((String)AccX);
+    dataFile.print(", ");
+    dataFile.print((String)AccY);
+    dataFile.print(", ");
+    dataFile.print((String)AccZ);
+    dataFile.println(", ");
+    dataFile.close();
   }
   else {
     Serial.println("error opening data.txt");
   }
+  delay(200);
 }
 void calculate_IMU_error() {
   // We can call this funtion in the setup section to calculate the accelerometer and gyro data error. From here we will get the error values used in the above equations printed on the Serial Monitor.

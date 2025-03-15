@@ -6,7 +6,7 @@ rotation_data = []
 
 # specific callsign or serial number to capture data from
 specific_callsign = "XXXYYYZZZ"  # callsign of sonde (if has one)
-specific_serial = "24059746"    # serial number of sonde
+specific_serial = "V3241339"    # serial number of sonde
 
 # function that runs when each message if recived
 def on_message(message):
