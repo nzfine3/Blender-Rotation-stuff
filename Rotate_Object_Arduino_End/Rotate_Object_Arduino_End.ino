@@ -1,9 +1,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include <SoftwareSerial.h>
 
-SoftwareSerial mySerial(4, 5); // RX, TX
 const int chipSelect = 10;
 const int MPU = 0x68; // MPU6050 I2C address
 float AccX, AccY, AccZ;
@@ -27,10 +25,9 @@ CS: 10
 RX/TX connections:
 RX: D4
 TX: D5
-*/
+*/ 
 void setup() {
   Serial.begin(9600);
-  mySerial.begin(9600);
   Wire.begin();                      // Initialize comunication
   Wire.beginTransmission(MPU);       // Start communication with MPU6050 // MPU=0x68
   Wire.write(0x6B);                  // register 6B
@@ -49,6 +46,7 @@ void setup() {
   calculate_IMU_error();
   delay(20);
   SD.begin(chipSelect);
+  
 }
 void loop() {
   // read data
@@ -122,20 +120,22 @@ void loop() {
   else {
     Serial.println("error opening data.txt");
   }
-  // add values to the Tiny4FSK through rx + tx: pins A1, A2
-  mySerial.print(Xrot);
-  mySerial.print(", ");
-  mySerial.print(Yrot);
-  mySerial.print(", ");
-  mySerial.print(Zrot);
-  mySerial.print(", ");
-  mySerial.print(AccX);
-  mySerial.print(", ");
-  mySerial.print(AccY);
-  mySerial.print(", ");
-  mySerial.print(AccZ);
-  mySerial.println(", ");
-  delay(200);
+  // add values to the Tiny4FSK through I2C
+  Wire.beginTransmission(9);
+  Wire.write(Xrot);
+  Wire.write(", ");
+  Wire.write(Yrot);
+  Wire.write(", ");
+  Wire.write(Zrot);
+  Wire.write(", ");
+  Wire.write(AccX);
+  Wire.write(", ");
+  Wire.write(AccY);
+  Wire.write(", ");
+  Wire.write(AccZ);
+  Wire.writeln(", ");
+  Wire.endTransmission();
+  delay(200)
 }
 void calculate_IMU_error() {
   // We can call this funtion in the setup section to calculate the accelerometer and gyro data error. From here we will get the error values used in the above equations printed on the Serial Monitor.
