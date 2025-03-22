@@ -1,8 +1,9 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <SoftwareSerial.h>
 
-
+SoftwareSerial mySerial(4, 5); // RX, TX
 const int chipSelect = 10;
 const int MPU = 0x68; // MPU6050 I2C address
 float AccX, AccY, AccZ;
@@ -23,9 +24,13 @@ SDO: 11
 SDI: 12
 CLK: 14
 CS: 10
+RX/TX connections:
+RX: D4
+TX: D5
 */
 void setup() {
   Serial.begin(9600);
+  mySerial.begin(9600);
   Wire.begin();                      // Initialize comunication
   Wire.beginTransmission(MPU);       // Start communication with MPU6050 // MPU=0x68
   Wire.write(0x6B);                  // register 6B
@@ -117,6 +122,19 @@ void loop() {
   else {
     Serial.println("error opening data.txt");
   }
+  // add values to the Tiny4FSK through rx + tx: pins A1, A2
+  mySerial.print(Xrot);
+  mySerial.print(", ");
+  mySerial.print(Yrot);
+  mySerial.print(", ");
+  mySerial.print(Zrot);
+  mySerial.print(", ");
+  mySerial.print(AccX);
+  mySerial.print(", ");
+  mySerial.print(AccY);
+  mySerial.print(", ");
+  mySerial.print(AccZ);
+  mySerial.println(", ");
   delay(200);
 }
 void calculate_IMU_error() {
