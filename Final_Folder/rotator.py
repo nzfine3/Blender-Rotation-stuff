@@ -10,9 +10,9 @@ latest_data = {
     'lat': 0.0, 'lon': 0.0  # GPS
 }
 
-
-specific_callsign = "XXXYYYZZZ"  # Replace with real callsign if available
-specific_serial = "W1840683"    # Replace with real serial number
+# Since you are probally going to only be using seral number, since it also checks if something is equal the callsign, LEAVE IT BLANK when you are not using it.
+specific_callsign = ""  # Replace with real callsign if available
+specific_serial = "W1340637"    # Replace with real serial number
 
 
 def on_message(message):
@@ -30,7 +30,7 @@ def on_message(message):
             latest_data['lat'] = message.get('lat', 0.0)
             latest_data['lon'] = message.get('lon', 0.0)
 
-            # Optional debug print
+            
             print(f"Alt: {latest_data['alt']} m, Temp: {latest_data['temp']} °C, Rot: {latest_data['x']}, {latest_data['y']}, {latest_data['z']}, Lat: {latest_data['lat']}, Lon: {latest_data['lon']}")
     except Exception as e:
         print(f"Error processing message: {e}")
@@ -62,7 +62,7 @@ def visualization_loop():
 
     
     while True:
-        rate(30)  # 30 updates per second
+        rate(15)  # 30 updates per second
 
         # Fetch latest data
         x = latest_data['x']
