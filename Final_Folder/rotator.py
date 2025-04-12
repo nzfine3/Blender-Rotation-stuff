@@ -1,8 +1,13 @@
 import sondehub
 from vpython import *
 
+import time
+
 import threading
 
+global t
+
+global p
 
 latest_data = {
     'x': 0.0, 'y': 0.0, 'z': 0.0,  # Rotation
@@ -10,8 +15,8 @@ latest_data = {
     'lat': 0.0, 'lon': 0.0  # GPS
 }
 
-# Since you are probally going to only be using seral number, since it also checks if something is equal the callsign, LEAVE IT BLANK when you are not using it.
-specific_callsign = ""  # Replace with real callsign if available
+# Since you are probally going to only be using seral number, since it also checks if something is equal the callsign, SET IT TO no_callsign when you are not using it.
+specific_callsign = "no_callsign"  # Replace with real callsign if available
 specific_serial = "W1340637"    # Replace with real serial number
 
 
@@ -30,7 +35,12 @@ def on_message(message):
             latest_data['lat'] = message.get('lat', 0.0)
             latest_data['lon'] = message.get('lon', 0.0)
 
-            
+            print(f"Received data from {callsign if callsign != 'no_callsign' else serial}:\n")
+            print(f"Rot: {latest_data['x']}, {latest_data['y']}, {latest_data['z']}")
+            print(f"Press: {latest_data['press']} hPa")
+            print(f"Alt: {latest_data['alt']} m")
+            print(f"Lat: {latest_data['lat']}, Lon: {latest_data['lon']}")
+            print(f"Temp: {latest_data['temp']} °C\n")
             print(f"Alt: {latest_data['alt']} m, Temp: {latest_data['temp']} °C, Rot: {latest_data['x']}, {latest_data['y']}, {latest_data['z']}, Lat: {latest_data['lat']}, Lon: {latest_data['lon']}")
     except Exception as e:
         print(f"Error processing message: {e}")
@@ -96,7 +106,9 @@ def visualization_loop():
 def start_sondehub_stream():
     test = sondehub.Stream(on_message=on_message)
     while True:
-        pass  # Keeps thread alive
+        pass # Keep the thread alive
+
+                
 
 
 sondehub_thread = threading.Thread(target=start_sondehub_stream, daemon=True)

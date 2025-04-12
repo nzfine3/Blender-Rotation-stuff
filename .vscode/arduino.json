@@ -1,0 +1,6 @@
+{
+    "sketch": "Rotate_Object_Arduino_End/Rotate_Object_Arduino_End.ino",
+    "configuration": "cpu=atmega328",
+    "board": "arduino:avr:nano",
+    "port": "/dev/tty.usbserial-110"
+}

@@ -16,10 +16,28 @@ int c = 0;
 Kalman kalmanX;  // Kalman filter instance for X-axis
 Kalman kalmanY;  // Kalman filter instance for Y-axis
 
+void requestEvent() {
+  Wire.beginTransmission(9);
+  Wire.write((byte)Xrot);
+  Wire.write(",");
+  Wire.write((byte)Yrot);
+  Wire.write(",");
+  Wire.write((byte)Zrot);
+  Wire.write(",");
+  Wire.write((byte)AccX * 101);
+  Wire.write(",");
+  Wire.write((byte)AccY * 101);
+  Wire.write(",");
+  Wire.write((byte)AccZ * 101);
+  Wire.endTransmission();
+  delay(500);
+}
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin();                      // Initialize communication
+  Wire.begin();
+  Wire.begin(9);                     // Initialize communication
+  Wire.onRequest(requestEvent);      // Register request event
   Wire.beginTransmission(MPU);       // Start communication with MPU6050
   Wire.write(0x6B);                  // Register 6B
   Wire.write(0x00);                  // Reset
@@ -89,11 +107,11 @@ void loop() {
   Serial.print(", ");
   Serial.print((int)Zrot);
   Serial.print(", ");
-  Serial.print((int)(AccX * 100));
+  Serial.print((int)(AccX));
   Serial.print(", ");
-  Serial.print((int)(AccY * 100));
+  Serial.print((int)(AccY));
   Serial.print(", ");
-  Serial.print((int)(AccZ * 100));
+  Serial.print((int)(AccZ));
   Serial.println(", ");
 
   // Save data to SD card
@@ -115,23 +133,6 @@ void loop() {
   } else {
     Serial.println("error opening data.txt");
   }
-
-  // Send values via I2C to Tiny4FSK
-  Wire.beginTransmission(9);
-  Wire.write((byte)Xrot * 3);
-  Wire.write(",");
-  Wire.write((byte)Yrot * 3);
-  Wire.write(",");
-  Wire.write((byte)Zrot * 3);
-  Wire.write(",");
-  Wire.write((byte)AccX * 3);
-  Wire.write(",");
-  Wire.write((byte)AccY * 3);
-  Wire.write(",");
-  Wire.write((byte)AccZ * 3);
-  // Wire.write("\0");
-  Wire.endTransmission();
-  delay(500);
 }
 
 void calculate_IMU_error() {
