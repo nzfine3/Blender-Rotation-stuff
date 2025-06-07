@@ -20,22 +20,18 @@ Kalman kalmanY;
 
 void requestEvent() {
   // Prepare data to send via I2C
-  byte data[6];
-  data[0] = (byte)Xrot;
-  data[1] = (byte)Yrot;
-  data[2] = (byte)Zrot;
-  data[3] = (byte)(AccX * 101);
-  data[4] = (byte)(AccY * 101);
-  data[5] = (byte)(AccZ * 101);
+  byte data[4];
+  data[0] = (int16_t)Xrot;
+  data[1] = (int16_t)Yrot;
+  data[2] = (byte)(AccX * 100);
+  data[3] = (byte)(AccY * 100);
 
   // Print the data to the Serial Monitor
   Serial.print("I2C Data Sent: ");
   Serial.print("Xrot: "); Serial.print((int)data[0]); Serial.print(", ");
   Serial.print("Yrot: "); Serial.print((int)data[1]); Serial.print(", ");
-  Serial.print("Zrot: "); Serial.print((int)data[2]); Serial.print(", ");
-  Serial.print("AccX: "); Serial.print((int)data[3]); Serial.print(", ");
-  Serial.print("AccY: "); Serial.print((int)data[4]); Serial.print(", ");
-  Serial.print("AccZ: "); Serial.println((int)data[5]);
+  Serial.print("AccX: "); Serial.print((int)data[2]); Serial.print(", ");
+  Serial.print("AccY: "); Serial.print((int)data[3]); Serial.print(", ");
 
   // Send data via I2C
   Wire.write(data, sizeof(data));
@@ -88,6 +84,7 @@ void setup() {
     Serial.println("SD card initialization failed!");
     while (1);
   }
+  Serial.println("Initialized.");
 }
 
 void loop() {
@@ -124,7 +121,6 @@ void loop() {
 
   Xrot = kalmanX.getAngle(accAngleX, GyroX, elapsedTime);
   Yrot = kalmanY.getAngle(accAngleY, GyroY, elapsedTime);
-  Zrot += GyroZ * elapsedTime;
 
   // === Save to SD card ===
   if (millis() - lastSDWriteTime >= sdWriteInterval) {
@@ -133,7 +129,6 @@ void loop() {
     if (dataFile) {
       dataFile.print(Xrot); dataFile.print(", ");
       dataFile.print(Yrot); dataFile.print(", ");
-      dataFile.print(Zrot); dataFile.print(", ");
       dataFile.print(AccX); dataFile.print(", ");
       dataFile.print(AccY); dataFile.print(", ");
       dataFile.print(AccZ); dataFile.println();
@@ -142,6 +137,11 @@ void loop() {
       Serial.println("Error opening DATA.txt");
     }
   }
-
+  Serial.print(Xrot); Serial.print(", ");
+  Serial.print(Yrot); Serial.print(", ");
+  Serial.print(Zrot); Serial.print(", ");
+  Serial.print(AccX); Serial.print(", ");
+  Serial.print(AccY); Serial.print(", ");
+  Serial.print(AccZ); Serial.println();
   delay(10);
 }

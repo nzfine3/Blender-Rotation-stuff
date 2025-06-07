@@ -17,7 +17,7 @@ latest_data = {
 
 # Since you are probally going to only be using seral number, since it also checks if something is equal the callsign, SET IT TO no_callsign when you are not using it.
 specific_callsign = "no_callsign"  # Replace with real callsign if available
-specific_serial = "W1340637"    # Replace with real serial number
+specific_serial = "V3330947"    # Replace with real serial number
 
 
 def on_message(message):
