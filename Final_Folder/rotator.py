@@ -16,8 +16,8 @@ latest_data = {
 }
 
 # Since you are probally going to only be using seral number, since it also checks if something is equal the callsign, SET IT TO no_callsign when you are not using it.
-specific_callsign = "no_callsign"  # Replace with real callsign if available
-specific_serial = "V3330947"    # Replace with real serial number
+specific_callsign = "StratoScience"  # Replace with real callsign if available
+specific_serial = "no_serial"    # Replace with real serial number
 
 
 def on_message(message):
@@ -26,9 +26,8 @@ def on_message(message):
         serial = message.get('serial', "no_serial")
 
         if callsign == specific_callsign or serial == specific_serial:
-            latest_data['x'] = float(message.get('rotationX', 0.0))
-            latest_data['y'] = float(message.get('rotationY', 0.0))
-            latest_data['z'] = float(message.get('rotationZ', 0.0))
+            latest_data['x'] = float(message.get('rot_x', 0.0))
+            latest_data['y'] = float(message.get('rot_y', 0.0))
             latest_data['alt'] = message.get('alt', 0.0)
             latest_data['press'] = message.get('press', 0.0)
             latest_data['temp'] = message.get('temp', 0.0)
@@ -77,7 +76,7 @@ def visualization_loop():
         # Fetch latest data
         x = latest_data['x']
         y = latest_data['y']
-        z = latest_data['z']
+        z = latest_data['z'] if latest_data['z'] !=0 else 0.0001  # Avoid division by zero in rotation
         alt = latest_data['alt']
         press = latest_data['press']
         temp = latest_data['temp']
@@ -99,12 +98,12 @@ def visualization_loop():
             f"Pressure: {press} hPa\n"
             f"Temperature: {temp} °C\n"
             f"Lat: {lat:.5f}, Lon: {lon:.5f}\n"
-            f"RotX: {x:.2f}°, RotY: {y:.2f}°, RotZ: {z:.2f}°"
+            f"RotX: {x:.2f}°, RotY: {y:.2f}°"
         )
 
 
 def start_sondehub_stream():
-    test = sondehub.Stream(on_message=on_message)
+    test = sondehub.Stream(on_message=on_message, prefix='amateur', sondes=["StratoScience"])
     while True:
         pass # Keep the thread alive
 

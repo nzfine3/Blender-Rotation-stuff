@@ -20,21 +20,27 @@ Kalman kalmanY;
 
 void requestEvent() {
   // Prepare data to send via I2C
-  byte data[4];
-  data[0] = (int16_t)Xrot;
-  data[1] = (int16_t)Yrot;
-  data[2] = (byte)(AccX * 100);
-  data[3] = (byte)(AccY * 100);
+  struct SensorData {
+    int16_t Xrot;
+    int16_t Yrot;
+    uint8_t AccX;
+    uint8_t AccY;
+  } data;
+
+  data.Xrot = (int16_t)Xrot;
+  data.Yrot = (int16_t)Yrot;
+  data.AccX = (int8_t)(AccX * 100);
+  data.AccY = (int8_t)(AccY * 100);
 
   // Print the data to the Serial Monitor
   Serial.print("I2C Data Sent: ");
-  Serial.print("Xrot: "); Serial.print((int)data[0]); Serial.print(", ");
-  Serial.print("Yrot: "); Serial.print((int)data[1]); Serial.print(", ");
-  Serial.print("AccX: "); Serial.print((int)data[2]); Serial.print(", ");
-  Serial.print("AccY: "); Serial.print((int)data[3]); Serial.print(", ");
+  Serial.print("Xrot: "); Serial.print(data.Xrot); Serial.print(", ");
+  Serial.print("Yrot: "); Serial.print(data.Yrot); Serial.print(", ");
+  Serial.print("AccX: "); Serial.print(data.AccX); Serial.print(", ");
+  Serial.print("AccY: "); Serial.print(data.AccY); Serial.println();
 
   // Send data via I2C
-  Wire.write(data, sizeof(data));
+  Wire.write((uint8_t*)&data, sizeof(data));
 }
 
 void setup() {
@@ -137,11 +143,12 @@ void loop() {
       Serial.println("Error opening DATA.txt");
     }
   }
-  Serial.print(Xrot); Serial.print(", ");
-  Serial.print(Yrot); Serial.print(", ");
-  Serial.print(Zrot); Serial.print(", ");
-  Serial.print(AccX); Serial.print(", ");
-  Serial.print(AccY); Serial.print(", ");
-  Serial.print(AccZ); Serial.println();
+  //PUT THESE BACK LATER
+  //Serial.print(Xrot); Serial.print(", ");
+  //Serial.print(Yrot); Serial.print(", ");
+  //Serial.print(Zrot); Serial.print(", ");
+  //Serial.print(AccX); Serial.print(", ");
+  //Serial.print(AccY); Serial.print(", ");
+  //Serial.print(AccZ); Serial.println();
   delay(10);
 }
