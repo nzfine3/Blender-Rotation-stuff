@@ -1,7 +1,12 @@
 #include <Wire.h>
+#include <SoftWire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <Kalman.h>
+
+// SoftWire pins for MPU6050 (change if needed)
+#define MPU_SDA_PIN 3
+#define MPU_SCL_PIN 2
 
 const int chipSelect = 10;
 const int MPU = 0x68; // MPU6050 I2C address
@@ -18,8 +23,15 @@ const unsigned long sdWriteInterval = 100; // in milliseconds
 Kalman kalmanX;
 Kalman kalmanY;
 
+// Create SoftWire object for MPU6050
+SoftWire sw(MPU_SDA_PIN, MPU_SCL_PIN);
+
+#define SW_TX_BUF_LEN 32
+#define SW_RX_BUF_LEN 32
+uint8_t sw_tx_buf[SW_TX_BUF_LEN];
+uint8_t sw_rx_buf[SW_RX_BUF_LEN];
+
 void requestEvent() {
-  // Prepare data to send via I2C
   struct SensorData {
     int16_t Xrot;
     int16_t Yrot;
@@ -32,48 +44,55 @@ void requestEvent() {
   data.AccX = (int8_t)(AccX * 100);
   data.AccY = (int8_t)(AccY * 100);
 
-  // Print the data to the Serial Monitor
   Serial.print("I2C Data Sent: ");
   Serial.print("Xrot: "); Serial.print(data.Xrot); Serial.print(", ");
   Serial.print("Yrot: "); Serial.print(data.Yrot); Serial.print(", ");
   Serial.print("AccX: "); Serial.print(data.AccX); Serial.print(", ");
   Serial.print("AccY: "); Serial.print(data.AccY); Serial.println();
 
-  // Send data via I2C
   Wire.write((uint8_t*)&data, sizeof(data));
 }
 
 void setup() {
   Serial.begin(115200);
 
-  Wire.begin(9); // Join I2C bus as slave address 9
-  Wire.onRequest(requestEvent); // Register I2C response handler
+  // Set SoftWire buffers
+  sw.setTxBuffer(sw_tx_buf, SW_TX_BUF_LEN);
+  sw.setRxBuffer(sw_rx_buf, SW_RX_BUF_LEN);
 
-  Wire.beginTransmission(MPU);
-  Wire.write(0x6B); // Power management register
-  Wire.write(0x00); // Wake up MPU6050
-  Wire.endTransmission(true);
+  // Now begin SoftWire
+  sw.begin();
 
-  Wire.beginTransmission(MPU);
-  Wire.write(0x1C); // ACCEL_CONFIG
-  Wire.write(0x10); // +/- 8g
-  Wire.endTransmission(true);
+  // Hardware I2C as slave for Tiny4FSK
+  Wire.begin(9);
+  Wire.onRequest(requestEvent);
 
-  Wire.beginTransmission(MPU);
-  Wire.write(0x1B); // GYRO_CONFIG
-  Wire.write(0x10); // 1000 deg/s
-  Wire.endTransmission(true);
+  // MPU6050 setup via SoftWire
+  sw.beginTransmission(MPU);
+  sw.write(0x6B); // Power management register
+  sw.write(0x00); // Wake up MPU6050
+  sw.endTransmission(true);
+
+  sw.beginTransmission(MPU);
+  sw.write(0x1C); // ACCEL_CONFIG
+  sw.write(0x10); // +/- 8g
+  sw.endTransmission(true);
+
+  sw.beginTransmission(MPU);
+  sw.write(0x1B); // GYRO_CONFIG
+  sw.write(0x10); // 1000 deg/s
+  sw.endTransmission(true);
 
   delay(20);
 
   // Read initial accelerometer values
-  Wire.beginTransmission(MPU);
-  Wire.write(0x3B);
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU, 6, true);
-  AccX = (Wire.read() << 8 | Wire.read()) / 16384.0;
-  AccY = (Wire.read() << 8 | Wire.read()) / 16384.0;
-  AccZ = (Wire.read() << 8 | Wire.read()) / 16384.0;
+  sw.beginTransmission(MPU);
+  sw.write(0x3B);
+  sw.endTransmission(false);
+  sw.requestFrom(MPU, 6, true);
+  AccX = (sw.read() << 8 | sw.read()) / 16384.0;
+  AccY = (sw.read() << 8 | sw.read()) / 16384.0;
+  AccZ = (sw.read() << 8 | sw.read()) / 16384.0;
 
   accAngleX = (atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180 / PI);
   accAngleY = (atan(-1 * AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180 / PI);
@@ -94,26 +113,28 @@ void setup() {
 }
 
 void loop() {
-  // === Read accelerometer ===
-  Wire.beginTransmission(MPU);
-  Wire.write(0x3B);
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU, 6, true);
-  AccX = (Wire.read() << 8 | Wire.read()) / 16384.0;
-  AccY = (Wire.read() << 8 | Wire.read()) / 16384.0;
-  AccZ = (Wire.read() << 8 | Wire.read()) / 16384.0;
+  // === Read accelerometer via SoftWire ===
+  sw.beginTransmission(MPU);
+  sw.write(0x3B);
+  sw.endTransmission(false);
+  delay(2);
+  sw.requestFrom(MPU, 6, true);
+  AccX = (sw.read() << 8 | sw.read()) / 16384.0;
+  AccY = (sw.read() << 8 | sw.read()) / 16384.0;
+  AccZ = (sw.read() << 8 | sw.read()) / 16384.0;
 
   accAngleX = (atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180 / PI);
   accAngleY = (atan(-1 * AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180 / PI);
 
-  // === Read gyroscope ===
-  Wire.beginTransmission(MPU);
-  Wire.write(0x43);
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU, 6, true);
-  GyroX = (Wire.read() << 8 | Wire.read()) / 131.0;
-  GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
-  GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
+  // === Read gyroscope via SoftWire ===
+  sw.beginTransmission(MPU);
+  sw.write(0x43);
+  sw.endTransmission(false);
+  delay(2);
+  sw.requestFrom(MPU, 6, true);
+  GyroX = (sw.read() << 8 | sw.read()) / 131.0;
+  GyroY = (sw.read() << 8 | sw.read()) / 131.0;
+  GyroZ = (sw.read() << 8 | sw.read()) / 131.0;
 
   // Gyro bias correction (adjust as needed)
   GyroX += 0.56;
@@ -143,12 +164,4 @@ void loop() {
       Serial.println("Error opening DATA.txt");
     }
   }
-  //PUT THESE BACK LATER
-  //Serial.print(Xrot); Serial.print(", ");
-  //Serial.print(Yrot); Serial.print(", ");
-  //Serial.print(Zrot); Serial.print(", ");
-  //Serial.print(AccX); Serial.print(", ");
-  //Serial.print(AccY); Serial.print(", ");
-  //Serial.print(AccZ); Serial.println();
-  delay(10);
 }
